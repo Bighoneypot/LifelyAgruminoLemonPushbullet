@@ -1,11 +1,13 @@
-/*LifelyAgruminoLemonPushbullet- 
-Created by Gabriele Foddis on 04/2023
+/*LifelyAgruminoLemonPushbullet(With automatic watering)-
+Created by Gabriele Foddis on 04/2023 -  Last update 19/04/2023 -
 gabriele.foddis@lifely.cc
 This firmware has been developed to send only important notifications for the irrigation and battery status, maximum attention to energy saving.
 I used pushbullet excellent platform to send and receive notifications. Ppossible to have a free or premium account at a very low cost. Visit https://www.pushbullet.com/
 the device sends messages only when necessary according to the configuration thresholds.
 You need to use pushbullet app,available for different platforms
-Find Lifely Agrumino Lemon (REV4 AND REV5) in www.lifely.cc */
+Find Lifely Agrumino Lemon (REV4 AND REV5) in www.lifely.cc 
+
+*/
 
 #include <Arduino.h>
 #include <Agrumino.h>
@@ -29,6 +31,10 @@ float temperature, lux, batteryVoltage;
 bool isBatteryCharging ;
 String agruminoName, msgDynamic, qD;
 
+bool enable_watering = true ; //set true or false to Enable/Disable watering
+unsigned int wateringTime = 5000; ///time in ms Milliseconds ( 1 seconds = 1000 ms) default 5000
+
+
 const char* thumbPrint = "D7:60:F4:84:EF:C4:25:4E:14:B7:5A:4B:4C:2E:F6:FD:53:5E:BF:8E"; 
 String pushBulletV2 = "/v2/pushes";
 int soilMoistureWarning = 30; ///set your value 
@@ -41,6 +47,17 @@ String msgBatteryWarning = "Hi dear, I need Power, recharge my battery";//custom
 String msgBatterySoilM ="Hi Dear, I need water and power for my battery... NOW";//customize as you like
 
 Agrumino agrumino;
+
+void watering() {
+  if (enable_watering == true){
+  agrumino.turnWateringOn();
+  DEBUG_INFO_MSG.println("Watering On");
+  delay(wateringTime);
+  agrumino.turnWateringOff();
+  DEBUG_INFO_MSG.println("Watering Off");
+  }
+}
+
 
 void readDataFromDevice(){
   DEBUG_INFO_MSG.println("...read data");
@@ -60,10 +77,12 @@ void checkData(){
   if (soilMoisture<soilMoistureWarning && batteryLevel>batteryWarning){  
   msgDynamic=msgWarningSoilM;
   DEBUG_WARNING_MSG.println("Warning soilMoisture");
+  watering();
   }
   else if(soilMoisture<soilMoistureWarning && batteryLevel<batteryWarning){
   msgDynamic=msgBatterySoilM;
   DEBUG_WARNING_MSG.println("Warning soilMoisture and battery");
+  watering();
   }
   else if(soilMoisture>soilMoistureWarning && batteryLevel<batteryWarning){
   msgDynamic=msgBatteryWarning;
